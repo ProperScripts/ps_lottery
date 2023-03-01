@@ -1,5 +1,49 @@
 QBCore = exports['qb-core']:GetCoreObject()
 
+-- Version checker
+local currentv = GetResourceMetadata(GetCurrentResourceName(), "version")
+
+CreateThread(function()
+    Citizen.Wait(5000)
+    PerformHttpRequest("https://api.github.com/repos/properscripts/ps_lottery/releases/latest", CheckVersion, "GET")
+end)
+
+CheckVersion = function(err, responseText, headers)
+    local repoVersion, repoURL, repoBody = GetRepoInformations()
+
+    CreateThread(function()
+        if currentv ~= repoVersion then
+            print("[^1WARNING^0] You do not have the latest ps_lottery version installed!")
+            print("[^1WARNING^0] Your Version: ^1" .. currentv .. "^0")
+            print("[^1WARNING^0] Latest Version: ^2" .. repoVersion .. "^0")
+            print("[^1WARNING^0] Get the latest version from: ^3" .. repoURL .. "^0")
+        end
+    end)
+end
+
+GetRepoInformations = function()
+    local repoVersion, repoURL, repoBody = nil, nil, nil
+
+    PerformHttpRequest("https://api.github.com/repos/properscripts/ps_lottery/releases/latest", function(err, response, headers)
+        if err == 200 then
+            local data = json.decode(response)
+
+            repoVersion = data.tag_name
+            repoURL = data.html_url
+            repoBody = data.body
+        else
+            repoVersion = curVersion
+            repoURL = "https://github.com/properscripts/ps_lottery"
+        end
+    end, "GET")
+
+    repeat
+        Wait(50)
+    until (repoVersion and repoURL and repoBody)
+
+    return repoVersion, repoURL, repoBody
+end
+
 Citizen.CreateThread(function()
     exports['qb-core']:AddItem('ticket', {
         name = 'ticket',
