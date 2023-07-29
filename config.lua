@@ -19,19 +19,19 @@ Config.Tickets = { --feel free to use your own items
     ['ticket1'] = { --item codes (automatically inserted into qb-core/shared/items.lua)
         Label = "Lottery Ticket", --label used in shared/items
         StartPrice = 300, --starting prize money for this ticket type
-        winChance = 0.25, --percentage chance to win this ticket
+        winChance = 2.5, --percentage chance to win this ticket
         increasePrice = 100, --how much money is added th prize pool when you lose
     },
     ['ticket2'] = {
         Label = "Lotto Ticket",
         StartPrice = 600,
-        winChance = 0.1,
+        winChance = 1.0,
         increasePrice = 200,
     },
     ['ticket3'] = {
         Label = "Powerball Ticket",
         StartPrice = 1000,
-        winChance = 0.01,
+        winChance = 0.1,
         increasePrice = 500,
     },
 }

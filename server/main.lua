@@ -82,7 +82,7 @@ Citizen.CreateThread(function()
             QBCore.Functions.CreateUseableItem(k, function(source, item)
                 local Player = QBCore.Functions.GetPlayer(source)
                 if Player.Functions.RemoveItem(item.name, 1, item.slot) then
-                    local won = math.random(1,100) < v.winChance
+                    local won = math.random() < (v.winChance / 100)
                     local taxpercent = 0
                     local paytax = 0
 
