@@ -2,10 +2,27 @@ QBCore = exports['qb-core']:GetCoreObject()
 
 -- Version checker
 local currentv = GetResourceMetadata(GetCurrentResourceName(), "version")
-
 CreateThread(function()
     Citizen.Wait(5000)
     PerformHttpRequest("https://api.github.com/repos/properscripts/ps_lottery/releases/latest", CheckVersion, "GET")
+
+    local LoadFile = LoadResourceFile(GetCurrentResourceName(), "./amount.json")
+    local jsonData = json.decode(LoadFile)
+    if jsonData == nil then
+        jsonData = {}
+    end
+    for k, v in pairs(Config.Tickets) do
+        if QBCore.Shared.Items[k] ~= nil then
+            if jsonData[k] == nil then
+                jsonData[k] = v.StartPrice
+            end
+            if Config.WipeOnRestart then
+                jsonData[k] = v.StartPrice
+            end
+        end
+    end
+    local updatedData = json.encode(jsonData)
+    SaveResourceFile(GetCurrentResourceName(), "./amount.json", updatedData, -1)
 end)
 
 CheckVersion = function(err, responseText, headers)
@@ -28,7 +45,7 @@ GetRepoInformations = function()
         if err == 200 then
             local data = json.decode(response)
 
-            repoVersion = data.tag_name
+            repoVersion = data.name
             repoURL = data.html_url
             repoBody = data.body
         else
@@ -45,36 +62,96 @@ GetRepoInformations = function()
 end
 
 Citizen.CreateThread(function()
-    exports['qb-core']:AddItem('ticket', {
-        name = 'ticket',
-        label = 'Lottery Ticket',
-        weight = 10,
-        type = 'item',
-        image = 'stickynote.png',
-        unique = false,
-        useable = true,
-        shouldClose = true,
-        combinable = nil,
-        description = 'Test your luck with these Lottery Tickets!'
-    })
-end)
+    for k,v in pairs (Config.Tickets) do
+        QBCore.Functions.AddItem(k, {
+            name = k,
+            label = v.Label,
+            weight = 10,
+            type = 'item',
+            image = 'lotteryticket.png',
+            unique = false,
+            useable = true,
+            shouldClose = true,
+            combinable = nil,
+            description = 'Test your luck with these Lottery Tickets!'
+        })
+    end
 
-QBCore.Functions.CreateUseableItem("ticket", function(source, item)
-    local Player = QBCore.Functions.GetPlayer(source)
-    if Player.Functions.RemoveItem(item.name, 1, item.slot) then
-        local won = math.random() < Config.winChance
-        local loadFile = LoadResourceFile(GetCurrentResourceName(), "./amount.json") --> read amount.json
-        local price = json.decode(loadFile).price --> Decode amount.json and get the current price
-        if not won then --> If the player didn't win, increase the new price pot
-            price = price + Config.increasePrice
+    for k, v in pairs(Config.Tickets) do
+        if QBCore.Shared.Items[k] ~= nil then
+            QBCore.Functions.CreateUseableItem(k, function(source, item)
+                local Player = QBCore.Functions.GetPlayer(source)
+                if Player.Functions.RemoveItem(item.name, 1, item.slot) then
+                    local won = math.random() < (v.winChance / 100)
+                    local taxpercent = 0
+                    local paytax = 0
+
+                    local LoadFile = LoadResourceFile(GetCurrentResourceName(), "./amount.json")
+                    local jsonData = json.decode(LoadFile)
+
+                    if Config.DebugJson then
+                        DebugJson(jsonData)
+                    end
+                    local price = jsonData[k]
+
+                    if not won then
+                        price = price + v.increasePrice
+                        -- Changed the notify event to be server sided
+                        PSNotify(source, "You lost, the new price pot is now $" .. price, "error")
+                    end
+
+                    if won then
+                        if Config.MoneyAsItem then
+                            Player.Functions.AddItem(Config.MoneyType, price)
+                            -- Enables the AP Government stuff if you have it toggled true
+                            if Config.APGov then
+                                taxpercent = Config.TaxPercent
+                                paytax = price * (taxpercent / 100)
+                                exports['ap-government']:chargeCityTax(source, "Lottery", paytax, Config.MoneyType)
+                            end
+                        else
+                            Player.Functions.AddMoney(Config.MoneyType, price)
+
+                            if Config.APGov then
+                                taxpercent = Config.TaxPercent
+                                paytax = price * (taxpercent / 100)
+                                exports['ap-government']:chargeCityTax(source, "Lottery", paytax, Config.MoneyType)
+                            end
+                        end
+
+                        PSNotify(source, "You Won $"..price.."!", "success")
+                        price = v.StartPrice
+                    end
+
+                    jsonData[k] = price
+                    local updatedData = json.encode(jsonData)
+                    SaveResourceFile(GetCurrentResourceName(), "./amount.json", updatedData, -1)
+                end
+            end)
+        else
+            print("^4PS_LOTTERY^7: Cannot find ^4" .. k .. "^7 in ^4Shared/Items.lua")
         end
-        TriggerClientEvent("ps_lotery:client:useticket", source, won, price)
-        if won then --> If the player won, give him the money and reset the price pot
-            Player.Functions.AddMoney(Config.type, price)
-            price = Config.StartPrice
-        end
-        local newTable = {price = price}
-        SaveResourceFile(GetCurrentResourceName(), "./amount.json", json.encode(newTable), -1) --> Save the new amount to amount.json
     end
 end)
 
+
+
+function PSNotify(src,msg,type,time)
+    if not time then
+        time = 5000
+    end
+    if Config.Notify == 'qb' then
+        TriggerClientEvent("QBCore:Notify", src, msg, type,time)
+    elseif Config.Notify == 'okok' then
+        TriggerClientEvent('okokNotify:Alert', src,msg,time,type)
+    elseif Config.Notify == 'qs' then
+        TriggerClientEvent('qs-notify:Alert', src, msg, time, type)
+    end
+end
+
+function DebugJson(jsonData)
+    if not jsonData then return end
+    for k,v in pairs(jsonData) do
+        print("Item = "..k.." Price = "..v.." !")
+    end
+end

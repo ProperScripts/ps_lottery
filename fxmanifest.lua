@@ -3,9 +3,8 @@ game 'gta5'
 
 author 'pietjepekSF#7950 & Stijnjw#1150'
 description 'Lottery script, by https://properscripts.tebex.io/'
-version '1.0'
+version '2.0'
 
-client_script 'client/main.lua'
 server_script 'server/main.lua'
 shared_script 'config.lua'
 

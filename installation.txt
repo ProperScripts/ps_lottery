@@ -3,6 +3,7 @@ Thank you for downloading a script from ProperScripts!
 To install this resource:
     - Drag and drop `ps_lottery` into your resources folder
     - Add `ensure ps_lottery` to your server.cfg
+    - Add lotteryticket.png from image folder to your inventory images folder
     - read `README.md` for configuration options
 
 If you run into any issues or need any help, feel free to join the Discord and ask us: https://discord.gg/7qkZWdc67Y
