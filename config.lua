@@ -4,8 +4,8 @@ Config = {}
 
 Config.DebugJson = false --prints the lottery price pots to the console everytime they are updated (server console not F8)
 
-Config.WipeOnRestart = false --resets the price pool for all tickets on server restart. false lets them build up to huge amounts. 
-Config.MoneyType = 'bank' --if config.moneyasitem = true then please put your money itemcode 
+Config.WipeOnRestart = false --resets the price pool for all tickets on server restart. false lets them build up to huge amounts.
+Config.MoneyType = 'bank' --if config.moneyasitem = true then please put your money itemcode
 Config.MoneyAsItem = false --true if you have money as item
 
 --ap government
@@ -22,17 +22,17 @@ Config.Tickets = { --feel free to use your own items
         winChance = 0.25, --percentage chance to win this ticket
         increasePrice = 100, --how much money is added th prize pool when you lose
     },
-    ['ticket2'] = { 
-        Label = "Lotto Ticket", 
-        StartPrice = 600, 
-        winChance = 0.1, 
-        increasePrice = 200, 
+    ['ticket2'] = {
+        Label = "Lotto Ticket",
+        StartPrice = 600,
+        winChance = 0.1,
+        increasePrice = 200,
     },
-    ['ticket3'] = { 
-        Label = "Powerball Ticket", 
-        StartPrice = 1000, 
-        winChance = 0.01, 
-        increasePrice = 500, 
+    ['ticket3'] = {
+        Label = "Powerball Ticket",
+        StartPrice = 1000,
+        winChance = 0.01,
+        increasePrice = 500,
     },
 }
 

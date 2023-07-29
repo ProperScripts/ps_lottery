@@ -45,7 +45,7 @@ GetRepoInformations = function()
         if err == 200 then
             local data = json.decode(response)
 
-            repoVersion = data.tag_name
+            repoVersion = data.name
             repoURL = data.html_url
             repoBody = data.body
         else
@@ -61,7 +61,7 @@ GetRepoInformations = function()
     return repoVersion, repoURL, repoBody
 end
 
-CreateThread(function()
+Citizen.CreateThread(function()
     for k,v in pairs (Config.Tickets) do
         QBCore.Functions.AddItem(k, {
             name = k,
@@ -76,63 +76,63 @@ CreateThread(function()
             description = 'Test your luck with these Lottery Tickets!'
         })
     end
-end)
 
-for k, v in pairs(Config.Tickets) do
-    if QBCore.Shared.Items[k] ~= nil then
-        QBCore.Functions.CreateUseableItem(k, function(source, item)
-            local Player = QBCore.Functions.GetPlayer(source)
-            if Player.Functions.RemoveItem(item.name, 1, item.slot) then
-                local won = math.random(1,100) < v.winChance
-                local taxpercent = 0
-                local paytax = 0
+    for k, v in pairs(Config.Tickets) do
+        if QBCore.Shared.Items[k] ~= nil then
+            QBCore.Functions.CreateUseableItem(k, function(source, item)
+                local Player = QBCore.Functions.GetPlayer(source)
+                if Player.Functions.RemoveItem(item.name, 1, item.slot) then
+                    local won = math.random(1,100) < v.winChance
+                    local taxpercent = 0
+                    local paytax = 0
 
-                local LoadFile = LoadResourceFile(GetCurrentResourceName(), "./amount.json")
-                local jsonData = json.decode(LoadFile)
+                    local LoadFile = LoadResourceFile(GetCurrentResourceName(), "./amount.json")
+                    local jsonData = json.decode(LoadFile)
 
-                if Config.DebugJson then
-                    DebugJson(jsonData)
-                end
-                local price = jsonData[k]
+                    if Config.DebugJson then
+                        DebugJson(jsonData)
+                    end
+                    local price = jsonData[k]
 
-                if not won then
-                    price = price + v.increasePrice
-                    -- Changed the notify event to be server sided
-                    PSNotify(source, "You lost, the new price pot is now $" .. price, "error")
-                end
-
-                if won then
-                    if Config.MoneyAsItem then
-                        Player.Functions.AddItem(Config.MoneyType, price)
-                        -- Enables the AP Government stuff if you have it toggled true
-                        if Config.APGov then
-                            taxpercent = Config.TaxPercent
-                            paytax = price * (taxpercent / 100)
-                            exports['ap-government']:chargeCityTax(source, "Lottery", paytax, Config.MoneyType)
-                        end
-                    else
-                        Player.Functions.AddMoney(Config.MoneyType, price)
-
-                        if Config.APGov then
-                            taxpercent = Config.TaxPercent
-                            paytax = price * (taxpercent / 100)
-                            exports['ap-government']:chargeCityTax(source, "Lottery", paytax, Config.MoneyType)
-                        end
+                    if not won then
+                        price = price + v.increasePrice
+                        -- Changed the notify event to be server sided
+                        PSNotify(source, "You lost, the new price pot is now $" .. price, "error")
                     end
 
-                    PSNotify(source, "You Won $"..price.."!", "success")
-                    price = v.StartPrice
-                end
+                    if won then
+                        if Config.MoneyAsItem then
+                            Player.Functions.AddItem(Config.MoneyType, price)
+                            -- Enables the AP Government stuff if you have it toggled true
+                            if Config.APGov then
+                                taxpercent = Config.TaxPercent
+                                paytax = price * (taxpercent / 100)
+                                exports['ap-government']:chargeCityTax(source, "Lottery", paytax, Config.MoneyType)
+                            end
+                        else
+                            Player.Functions.AddMoney(Config.MoneyType, price)
 
-                jsonData[k] = price
-                local updatedData = json.encode(jsonData)
-                SaveResourceFile(GetCurrentResourceName(), "./amount.json", updatedData, -1)
-            end
-        end)
-    else
-        print("^4PS_LOTTERY^7: Cannot find ^4" .. k .. "^7 in ^4Shared/Items.lua")
+                            if Config.APGov then
+                                taxpercent = Config.TaxPercent
+                                paytax = price * (taxpercent / 100)
+                                exports['ap-government']:chargeCityTax(source, "Lottery", paytax, Config.MoneyType)
+                            end
+                        end
+
+                        PSNotify(source, "You Won $"..price.."!", "success")
+                        price = v.StartPrice
+                    end
+
+                    jsonData[k] = price
+                    local updatedData = json.encode(jsonData)
+                    SaveResourceFile(GetCurrentResourceName(), "./amount.json", updatedData, -1)
+                end
+            end)
+        else
+            print("^4PS_LOTTERY^7: Cannot find ^4" .. k .. "^7 in ^4Shared/Items.lua")
+        end
     end
-end
+end)
 
 
 
